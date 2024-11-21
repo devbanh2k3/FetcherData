@@ -65,26 +65,29 @@ app.post('/get-facebook-data', async (req, res) => {
 
 // API lấy redirect URL của một link
 app.post('/get-redirect-id-from-url', async (req, res) => {
-    const { url } = req.body;
+    const { url, cookie } = req.body;
 
-    // Kiểm tra xem client có gửi link không
-    if (!url) {
-        return res.status(400).send("Missing URL");
+    // Kiểm tra xem client có gửi đủ thông tin không
+    if (!url || !cookie) {
+        return res.status(400).send("Missing URL or Cookie");
     }
 
     try {
-        // Sử dụng axios để gửi yêu cầu HTTP, cấu hình với phương thức 'HEAD' và theo dõi redirect
+        // Sử dụng axios để gửi yêu cầu HTTP với phương thức 'HEAD'
         const response = await axios.head(url, {
             maxRedirects: 5, // Tối đa 5 lần redirect
-            validateStatus: (status) => status >= 200 && status < 400 // Chấp nhận tất cả các trạng thái từ 2xx đến 3xx
+            validateStatus: (status) => status >= 200 && status < 400, // Chấp nhận tất cả trạng thái từ 2xx đến 3xx
+            headers: {
+                'Cookie': cookie, // Thêm cookie vào headers
+            }
         });
 
         // Lấy URL cuối cùng sau khi redirect
         const redirectedUrl = response.request.res.responseUrl;
-        console.log(redirectedUrl)
+        console.log(redirectedUrl);
+
         // Phân tích URL đã redirect để lấy tham số
         const urlObj = new URL(redirectedUrl);
-       
         const story_fbid = urlObj.searchParams.get('story_fbid');
         const id = urlObj.searchParams.get('id');
 
