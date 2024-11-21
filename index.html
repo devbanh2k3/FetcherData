@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Data Fetcher</title>
+</head>
+<body>
+    <h1>Facebook Data Fetcher</h1>
+
+    <!-- Form to get Facebook Post Data -->
+    <h2>Get Facebook Post Data</h2>
+    <form id="get-facebook-data-form">
+        <label for="accessToken">ACCESS_TOKEN:</label>
+        <input type="text" id="accessToken" name="accessToken" required><br><br>
+        
+        <label for="cookie">COOKIE:</label>
+        <input type="text" id="cookie" name="cookie" required><br><br>
+        
+        <label for="idPost">Post ID:</label>
+        <input type="text" id="idPost" name="idPost" required><br><br>
+        
+        <button type="submit">Get Data</button>
+    </form>
+
+    <hr>
+
+    <!-- Form to get redirect URL and ID from multiple links -->
+    <h2>Get Redirect URL and ID from Links</h2>
+    <label for="links">Enter Links (one per line):</label><br>
+    <textarea id="links" rows="10" cols="50" placeholder="Enter each link on a new line"></textarea><br><br>
+    <button id="process-links-btn">Get Redirect IDs and Data</button>
+
+    <h3>Results:</h3>
+    <pre id="result"></pre>
+
+    <script>
+        // Handle Get Facebook Data Form Submission
+        document.getElementById('get-facebook-data-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            const accessToken = document.getElementById('accessToken').value;
+            const cookie = document.getElementById('cookie').value;
+            const idPost = document.getElementById('idPost').value;
+
+            const response = await fetch('http://localhost:3000/get-facebook-data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    accessToken: accessToken,
+                    cookie: cookie,
+                    idPost: idPost
+                })
+            });
+
+            const result = await response.json();
+            document.getElementById('result').textContent = JSON.stringify(result, null, 2);
+        });
+
+        // Handle Process Links and Get Redirect ID for Each Link (without waiting for all results)
+        document.getElementById('process-links-btn').addEventListener('click', async () => {
+            const links = document.getElementById('links').value.split('\n').map(link => link.trim()).filter(link => link !== '');
+            const resultElement = document.getElementById('result');
+            
+            // Clear previous results
+            resultElement.textContent = "Processing links...\n";
+
+            // Loop through each link and send request
+            for (const link of links) {
+                try {
+                    const response = await fetch('http://localhost:3000/get-redirect-id-from-url', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ url: link })
+                    });
+
+                    const result = await response.json();
+                    const id_story_fbid = result.id_story_fbid;
+
+                    // Output the id_story_fbid first
+                    resultElement.textContent += `Link: ${link}\nID: ${id_story_fbid}\n`;
+
+                    // Now call the API get-facebook-data with the ID
+                    const facebookDataResponse = await fetch('http://localhost:3000/get-facebook-data', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            accessToken: document.getElementById('accessToken').value,
+                            cookie: document.getElementById('cookie').value,
+                            idPost: id_story_fbid
+                        })
+                    });
+
+                    const facebookData = await facebookDataResponse.json();
+
+                    // Display the Facebook Data for the current link
+                    resultElement.textContent += `Facebook Data: ${JSON.stringify(facebookData, null, 2)}\n\n`;
+
+                } catch (error) {
+                    // Handle error for each link and show immediately
+                    resultElement.textContent += `Link: ${link}\nError: Failed to get ID\n\n`;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
