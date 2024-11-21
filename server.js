@@ -26,9 +26,7 @@ app.post('/get-facebook-data', async (req, res) => {
         method: 'get',
         maxBodyLength: Infinity,
         url: `https://graph.facebook.com/v21.0/${idPost}?fields=reactions.summary(true),shares,comments.summary(true).filter(stream).limit(0),picture&id=${idPost}&access_token=${accessToken}`,
-        headers: {
-            'Cookie': cookie
-        }
+       
     };
 
     try {
@@ -84,10 +82,11 @@ app.post('/get-redirect-id-from-url', async (req, res) => {
 
         // Lấy URL cuối cùng sau khi redirect
         const redirectedUrl = response.request.res.responseUrl;
-        console.log(redirectedUrl);
+      
 
         // Phân tích URL đã redirect để lấy tham số
         const urlObj = new URL(redirectedUrl);
+        console.log(urlObj)
         const story_fbid = urlObj.searchParams.get('story_fbid');
         const id = urlObj.searchParams.get('id');
 
