@@ -84,6 +84,7 @@ app.post('/get-redirect-id-from-url', async (req, res) => {
 
         // Phân tích URL đã redirect để lấy tham số
         const urlObj = new URL(redirectedUrl);
+        console.log(urlObj)
         const story_fbid = urlObj.searchParams.get('story_fbid');
         const id = urlObj.searchParams.get('id');
 
