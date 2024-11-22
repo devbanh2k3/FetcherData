@@ -49,7 +49,7 @@ app.post('/get-facebook-data', async (req, res) => {
         res.json(result); // Trả dữ liệu cho client
     } catch (error) {
         const result = {
-            reactions_count:  0,
+            reactions_count: 0,
             shares_count: 0,
             comments_count: 0,
             picture: null,  // Nếu có ảnh thì trả về, nếu không trả về null
@@ -77,28 +77,42 @@ app.post('/get-redirect-id-from-url', async (req, res) => {
         const response = await axios.head(url, {
             maxRedirects: 5, // Tối đa 5 lần redirect
             validateStatus: (status) => status >= 200 && status < 400, // Chấp nhận tất cả trạng thái từ 2xx đến 3xx
-           
+
         });
 
         // Lấy URL cuối cùng sau khi redirect
         const redirectedUrl = response.request.path;
-      
-        console.log(redirectedUrl)
-        // Phân tích URL đã redirect để lấy tham số
-        const urlObj = new URLSearchParams(redirectedUrl.split('?')[1]);
-        const story_fbid = urlObj.get('story_fbid');
-        const id = urlObj.get('id');
-        // const story_fbid = urlObj.searchParams.get('story_fbid');
-        // const id = urlObj.searchParams.get('id');
 
-        if (story_fbid && id) {
-            // Ghép lại thành id_story_fbid
-            const id_story_fbid = `${id}_${story_fbid}`;
-            //console.log(id_story_fbid)
-            res.json({ id_story_fbid });
-        } else {
-            res.status(400).send("Missing required parameters (story_fbid or id)");
+        console.log(redirectedUrl)
+        const queryParams = new URLSearchParams(redirectedUrl.split('?')[1]);
+
+        // Nếu URL đã mã hóa, giải mã trực tiếp tất cả các tham số
+        for (const [key, value] of queryParams.entries()) {
+            console.log(`${key}: ${value}`);
         }
+
+        // Kiểm tra và lấy các tham số cần thiết
+        let story_fbid = queryParams.get('story_fbid');
+        let id = queryParams.get('id');
+
+        // Nếu không tìm thấy `story_fbid` hoặc `id`, thử lấy từ `next`
+        if ((!story_fbid || !id) && queryParams.get('next')) {
+            const nextUrl = decodeURIComponent(queryParams.get('next'));
+            const nextParams = new URLSearchParams(nextUrl.split('?')[1]);
+            story_fbid = story_fbid || nextParams.get('story_fbid');
+            id = id || nextParams.get('id');
+        }
+
+        // Tạo kết quả `id_story_fbid`
+        if (story_fbid && id) {
+            const id_story_fbid = `${id}_${story_fbid}`;
+            res.json({ id_story_fbid });
+            
+        } else {
+            console.error("Missing required parameters (story_fbid or id)");
+            res.status(500).send("Missing required parameters (story_fbid or id)");
+        }
+
 
     } catch (error) {
         console.error("Error fetching redirect URL or parsing:", error.message);
