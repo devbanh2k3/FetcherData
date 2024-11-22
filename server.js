@@ -81,14 +81,15 @@ app.post('/get-redirect-id-from-url', async (req, res) => {
         });
 
         // Lấy URL cuối cùng sau khi redirect
-        const redirectedUrl = response.path;
+        const redirectedUrl = response.request.path;
       
-        console.log(response)
+        console.log(redirectedUrl)
         // Phân tích URL đã redirect để lấy tham số
-        const urlObj = new URL(redirectedUrl);
-     
-        const story_fbid = urlObj.searchParams.get('story_fbid');
-        const id = urlObj.searchParams.get('id');
+        const urlObj = new URLSearchParams(redirectedUrl.split('?')[1]);
+        const story_fbid = urlObj.get('story_fbid');
+        const id = urlObj.get('id');
+        // const story_fbid = urlObj.searchParams.get('story_fbid');
+        // const id = urlObj.searchParams.get('id');
 
         if (story_fbid && id) {
             // Ghép lại thành id_story_fbid
