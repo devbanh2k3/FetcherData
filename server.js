@@ -77,15 +77,13 @@ app.post('/get-redirect-id-from-url', async (req, res) => {
         const response = await axios.head(url, {
             maxRedirects: 5, // Tối đa 5 lần redirect
             validateStatus: (status) => status >= 200 && status < 400, // Chấp nhận tất cả trạng thái từ 2xx đến 3xx
-            headers: {
-                'Cookie': cookie, // Thêm cookie vào headers
-            }
+           
         });
 
         // Lấy URL cuối cùng sau khi redirect
-        const redirectedUrl = response.request.res.responseUrl;
+        const redirectedUrl = response.path;
       
-
+        console.log(response)
         // Phân tích URL đã redirect để lấy tham số
         const urlObj = new URL(redirectedUrl);
      
