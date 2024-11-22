@@ -25,8 +25,10 @@ app.post('/get-facebook-data', async (req, res) => {
     let config = {
         method: 'get',
         maxBodyLength: Infinity,
-        url: `https://graph.facebook.com/v21.0/${idPost}?fields=reactions.summary(true),shares,comments.summary(true).filter(stream).limit(0),picture&id=${idPost}&access_token=${accessToken}`,
-       
+        url: `https://graph.facebook.com/v21.0/${idPost}?fields=reactions.summary(true),shares,comments.summary(true).filter(stream).limit(0),picture&access_token=${accessToken}`,
+        headers: {
+            'Cookie': cookie
+        }
     };
 
     try {
@@ -86,13 +88,14 @@ app.post('/get-redirect-id-from-url', async (req, res) => {
 
         // Phân tích URL đã redirect để lấy tham số
         const urlObj = new URL(redirectedUrl);
-        console.log(urlObj)
+     
         const story_fbid = urlObj.searchParams.get('story_fbid');
         const id = urlObj.searchParams.get('id');
 
         if (story_fbid && id) {
             // Ghép lại thành id_story_fbid
             const id_story_fbid = `${id}_${story_fbid}`;
+            //console.log(id_story_fbid)
             res.json({ id_story_fbid });
         } else {
             res.status(400).send("Missing required parameters (story_fbid or id)");
